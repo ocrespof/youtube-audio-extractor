@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extractor de Audio de Alta Fidelidad (M4A)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #030811;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #FBC108;
+            --primary-hover: #e2ab00;
+            --card-bg: rgba(11, 22, 38, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            --font-family: 'Plus Jakarta Sans', sans-serif;
+            --heading-font: 'Outfit', sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background Blobs */
+        .background-blobs {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.18;
+        }
+
+        .blob-purple {
+            top: 15%;
+            left: 10%;
+            width: 450px;
+            height: 450px;
+            background: #8b5cf6;
+            animation: float-blob-1 25s infinite alternate ease-in-out;
+        }
+
+        .blob-blue {
+            bottom: 15%;
+            right: 10%;
+            width: 500px;
+            height: 500px;
+            background: #3b82f6;
+            animation: float-blob-2 30s infinite alternate ease-in-out;
+        }
+
+        @keyframes float-blob-1 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(60px, 80px) scale(1.1); }
+            100% { transform: translate(-30px, 120px) scale(0.9); }
+        }
+
+        @keyframes float-blob-2 {
+            0% { transform: translate(0, 0) scale(1.1); }
+            50% { transform: translate(-80px, -60px) scale(0.95); }
+            100% { transform: translate(40px, 30px) scale(1); }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 550px;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Glassmorphism Card */
+        .downloader-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: var(--glass-shadow);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .logo-area {
+            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .logo-badge {
+            width: 60px;
+            height: 60px;
+            background: rgba(251, 193, 8, 0.1);
+            border: 1px solid rgba(251, 193, 8, 0.25);
+            border-radius: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary);
+        }
+
+        h1 {
+            font-family: var(--heading-font);
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            background-color: rgba(15, 23, 42, 0.6);
+            color: #ffffff;
+            font-family: var(--font-family);
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input[type="url"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(251, 193, 8, 0.2);
+            background-color: rgba(15, 23, 42, 0.8);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        input[type="url"]:focus + .input-icon {
+            color: var(--primary);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--primary);
+            color: #0b1626;
+            border: none;
+            border-radius: 12px;
+            font-family: var(--font-family);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 15px rgba(251, 193, 8, 0.3);
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(251, 193, 8, 0.4);
+        }
+
+        button:disabled {
+            background-color: #334155;
+            color: #64748b;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Status and Messages */
+        .status-container {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--glass-border);
+            display: none;
+            transition: var(--transition);
+        }
+
+        .status-container.active {
+            display: block;
+        }
+
+        .status-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .status-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .error {
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .success {
+            color: #10b981;
+            border-color: rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .processing {
+            color: #fbc108;
+            border-color: rgba(251, 193, 8, 0.2);
+            background: rgba(251, 193, 8, 0.05);
+        }
+
+        /* Spinner animation */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(11, 22, 38, 0.2);
+            border-radius: 50%;
+            border-top-color: #0b1626;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        button:disabled .spinner {
+            display: inline-block;
+        }
+
+        button:disabled span {
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .api-config {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--glass-border);
+            transition: var(--transition);
+        }
+
+        .api-config:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Selector de API discreto -->
+    <div id="apiConfig" class="api-config" title="Haz clic para cambiar el endpoint de la API">
+        API: Localhost
+    </div>
+
+    <div class="background-blobs">
+        <div class="blob blob-purple"></div>
+        <div class="blob blob-blue"></div>
+    </div>
+
+    <div class="container">
+        <div class="downloader-card">
+            <div class="logo-area">
+                <div class="logo-badge">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a11 11 0 1 0 11 11A11 11 0 0 0 12 1zm0 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/><path d="M12 7v5l3 3"/></svg>
+                </div>
+                <h1>Descargar Audio M4A</h1>
+                <p class="subtitle">Extracción nativa de alta fidelidad desde YouTube</p>
+            </div>
+
+            <form id="downloadForm">
+                <div class="form-group">
+                    <label for="youtubeUrl">Enlace de YouTube</label>
+                    <div class="input-wrapper">
+                        <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." required>
+                        <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    </div>
+                </div>
+                <button type="submit" id="submitBtn">
+                    <div class="spinner"></div>
+                    <span>Extraer Audio M4A</span>
+                </button>
+            </form>
+
+            <div id="statusContainer" class="status-container">
+                <div id="statusTitle" class="status-title">Procesando...</div>
+                <div id="statusDesc" class="status-desc">Iniciando conexión con el servidor.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de endpoints (Fácil de alternar entre pruebas locales y el servidor de Render)
+        const ENDPOINTS = {
+            localhost: 'http://localhost:8000',
+            production: 'https://youtube-audio-extractor-5hrz.onrender.com'
+        };
+
+        // Estado inicial de la API: autodetectar si es local o producción
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        let currentEnv = localStorage.getItem('downloader-env') || (isLocal ? 'localhost' : 'production');
+        const apiConfigBtn = document.getElementById('apiConfig');
+
+        function updateApiButton() {
+            if (currentEnv === 'localhost') {
+                apiConfigBtn.textContent = 'API: Localhost (8000)';
+                apiConfigBtn.style.borderColor = 'rgba(251, 193, 8, 0.3)';
+            } else {
+                apiConfigBtn.textContent = 'API: Producción (Render)';
+                apiConfigBtn.style.borderColor = '#10b981';
+            }
+        }
+        updateApiButton();
+
+        // Permitir cambiar de endpoint haciendo clic en la etiqueta superior
+        apiConfigBtn.addEventListener('click', () => {
+            if (currentEnv === 'localhost') {
+                const prodUrl = prompt('Ingresa la URL de producción de Render (ej: https://app.onrender.com):', ENDPOINTS.production);
+                if (prodUrl) {
+                    ENDPOINTS.production = prodUrl;
+                    currentEnv = 'production';
+                    localStorage.setItem('downloader-production-url', prodUrl);
+                }
+            } else {
+                currentEnv = 'localhost';
+            }
+            localStorage.setItem('downloader-env', currentEnv);
+            updateApiButton();
+        });
+
+        // Recuperar URL de producción guardada
+        const savedProdUrl = localStorage.getItem('downloader-production-url');
+        if (savedProdUrl) {
+            ENDPOINTS.production = savedProdUrl;
+        }
+
+        function getBaseUrl() {
+            return currentEnv === 'localhost' ? ENDPOINTS.localhost : ENDPOINTS.production;
+        }
+
+        // Lógica del Formulario
+        document.getElementById('downloadForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const urlInput = document.getElementById('youtubeUrl');
+            const submitBtn = document.getElementById('submitBtn');
+            const statusContainer = document.getElementById('statusContainer');
+            const statusTitle = document.getElementById('statusTitle');
+            const statusDesc = document.getElementById('statusDesc');
+
+            const youtubeUrl = urlInput.value.trim();
+
+            // Validación de expresión regular para YouTube
+            const ytRegexp = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
+            if (!ytRegexp.test(youtubeUrl)) {
+                showStatus('error', 'Enlace Inválido', 'Por favor ingresa una dirección URL de YouTube válida.');
+                return;
+            }
+
+            // Iniciar flujo visual
+            submitBtn.disabled = true;
+            showStatus('processing', 'Consultando Video', 'Obteniendo información y título desde el servidor...');
+
+            try {
+                const apiUrl = `${getBaseUrl()}/api/v1/download-m4a`;
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: youtubeUrl })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Fallo en la comunicación con la API de descarga.');
+                }
+
+                showStatus('processing', 'Descargando Audio', 'Descarga en progreso... Preparando el archivo para tu navegador.');
+
+                // Obtener nombre del archivo de la cabecera
+                let filename = "audio.m4a";
+                const disposition = response.headers.get('Content-Disposition');
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    const matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) {
+                        filename = matches[1].replace(/['"]/g, '');
+                    }
+                }
+
+                // Descargar el blob
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(downloadUrl);
+
+                showStatus('success', '¡Completado!', `Se ha guardado: "${filename}"`);
+                urlInput.value = "";
+
+            } catch (error) {
+                showStatus('error', 'Error en la Descarga', error.message);
+            } finally {
+                submitBtn.disabled = false;
+            }
+
+            function showStatus(type, title, desc) {
+                statusContainer.className = `status-container active ${type}`;
+                statusTitle.textContent = title;
+                statusDesc.textContent = desc;
+            }
+        });
+    </script>
+</body>
+</html>
